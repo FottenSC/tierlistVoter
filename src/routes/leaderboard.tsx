@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { RotateCcw, Settings2, Share2, X } from "lucide-react"
 import { snapdom } from '@zumer/snapdom'
 import { toast } from 'sonner'
 import type { Character } from '@/lib/types'
 import { characters as initialCharacters } from '@/lib/characters'
+import { useMatch } from '@/lib/match-context'
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -25,6 +26,9 @@ import {
 } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+
+// Global to track hydration across navigations
+let hasHydratedGlobal = false
 
 // Helper to ensure color is in hex format for input[type="color"]
 const ensureHex = (color: string) => {
@@ -143,30 +147,46 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
 })
 
 function Leaderboard() {
+  const [isReady, setIsReady] = useState(hasHydratedGlobal)
   const [data, setData] = useState<Array<Character>>(() => {
-    const chars = getStoredCharacters()
-    return [...chars].sort((a, b) => b.rating - a.rating)
+    if (hasHydratedGlobal) {
+      const chars = getStoredCharacters()
+      return [...chars].sort((a, b) => b.rating - a.rating)
+    }
+    return []
   })
   const [sharing, setSharing] = useState(false)
-  const [tierConfig, setTierConfig] = useState<Array<TierConfig>>(getStoredTierConfig)
+  const [tierConfig, setTierConfig] = useState<Array<TierConfig>>(() => {
+    if (hasHydratedGlobal) return getStoredTierConfig()
+    return []
+  })
   const [confirmText, setConfirmText] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const tierlistRef = useRef<HTMLDivElement>(null)
+  const { resetQueue } = useMatch()
 
   useEffect(() => {
-    // Sync state if localStorage changes (optional but good for consistency)
-    setData([...getStoredCharacters()].sort((a, b) => b.rating - a.rating))
-    setTierConfig(getStoredTierConfig())
+    if (!hasHydratedGlobal) {
+      const chars = getStoredCharacters()
+      setData([...chars].sort((a, b) => b.rating - a.rating))
+      setTierConfig(getStoredTierConfig())
+      hasHydratedGlobal = true
+      setIsReady(true)
+    }
   }, [])
 
   const handleReset = () => {
     localStorage.removeItem('characters-data')
+    localStorage.removeItem('match-queue')
+    localStorage.removeItem('current-match-pair')
+    localStorage.removeItem('next-match-pair')
+    resetQueue()
     const chars = getStoredCharacters()
     setData([...chars].sort((a, b) => b.rating - a.rating))
     setConfirmText('')
     setIsOpen(false)
-    toast.success('All character data has been reset.')
+    toast.success('All character data and match queue have been reset.')
   }
 
   const handleTierCountChange = (index: number, value: string) => {
@@ -175,7 +195,7 @@ function Leaderboard() {
     if (value !== '') {
       count = Math.max(1, Math.min(28, parseInt(value) || 1))
     }
-    newConfig[index] = { ...newConfig[index], count: count as any }
+    newConfig[index] = { ...newConfig[index], count }
     setTierConfig(newConfig)
     localStorage.setItem('tier-config', JSON.stringify(newConfig))
   }
@@ -278,13 +298,10 @@ function Leaderboard() {
     }
   }
 
-  // Defer updates to tier config for performance
-  const deferredTierConfig = useDeferredValue(tierConfig)
-
   // Calculate tier assignments
   const tiersWithCharacters = useMemo(() => {
     let currentIndex = 0
-    return deferredTierConfig.map((tier) => {
+    return tierConfig.map((tier) => {
       const count = typeof tier.count === 'number' ? tier.count : (parseInt(tier.count) || 0)
       const tierCharacters = data.slice(currentIndex, currentIndex + count)
       const startRank = currentIndex + 1
@@ -295,9 +312,23 @@ function Leaderboard() {
         startRank,
       }
     })
-  }, [data, deferredTierConfig])
+  }, [data, tierConfig])
 
-
+  if (!isReady) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-b from-muted via-muted/20 to-black">
+        <div className="container py-8 max-w-7xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 className="text-4xl font-serif font-bold tracking-widest text-primary uppercase drop-shadow-md">Your Tierlist</h1>
+          </div>
+          <div className="rounded-lg overflow-hidden border border-black/50 shadow-2xl bg-[#1a1a1a]/50 backdrop-blur-sm h-[600px] flex flex-col items-center justify-center gap-4">
+            <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="text-primary font-serif italic tracking-widest animate-pulse uppercase text-sm">Loading Stage of History...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-b from-muted via-muted/20 to-black">
