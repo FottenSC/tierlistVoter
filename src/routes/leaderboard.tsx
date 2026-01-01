@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState, useMemo, useDeferredValue, memo } from 'react'
-import { Character } from '@/lib/types'
+import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { RotateCcw, Settings2, X } from "lucide-react"
+import type { Character } from '@/lib/types'
 import { characters as initialCharacters } from '@/lib/characters'
 import { Button } from "@/components/ui/button"
 import {
@@ -15,13 +16,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { RotateCcw, Settings2, X } from "lucide-react"
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 // Helper to ensure color is in hex format for input[type="color"]
 const ensureHex = (color: string) => {
@@ -35,12 +36,12 @@ const ensureHex = (color: string) => {
 }
 
 // Helper to get persistence from localStorage
-const getStoredCharacters = (): Character[] => {
+const getStoredCharacters = (): Array<Character> => {
     if (typeof window === 'undefined') return initialCharacters
     const stored = localStorage.getItem('characters-data')
     if (stored) {
         try {
-            const parsed = JSON.parse(stored) as Character[]
+            const parsed = JSON.parse(stored) as Array<Character>
             // Merge with initial characters to ensure new properties (like circleImage) are present
             return initialCharacters.map(initial => {
                 const found = parsed.find(p => p.id === initial.id)
@@ -86,27 +87,28 @@ export const Route = createFileRoute('/leaderboard')({
 interface TierRowProps {
   label: string
   color: string
-  characters: Character[]
+  characters: Array<Character>
   startRank: number
+  isLast?: boolean
 }
 
-const TierRow = memo(function TierRow({ label, color, characters, startRank }: TierRowProps) {
+const TierRow = memo(function TierRow({ label, color, characters, startRank, isLast }: TierRowProps) {
   return (
-    <div className="flex border-b border-black/50 last:border-b-0">
+    <div className="flex border-b border-black/50 last:border-b-0 relative">
       {/* Tier label */}
       <div 
-        className="w-32 min-h-[110px] flex-shrink-0 flex items-center justify-center font-bold text-3xl text-[#333] border-r border-black/50"
+        className="w-16 md:w-32 min-h-[85px] md:min-h-[110px] flex-shrink-0 flex items-center justify-center font-bold text-xl md:text-3xl text-[#333] border-r border-black/50"
         style={{ backgroundColor: color }}
       >
         {label}
       </div>
       
       {/* Character row */}
-      <div className="flex-1 flex flex-wrap items-center gap-0 bg-[#1a1a1a] min-h-[110px]">
+      <div className="flex-1 flex flex-wrap items-center gap-0 bg-[#1a1a1a] min-h-[85px] md:min-h-[110px]">
         {characters.map((char, index) => (
           <div
             key={char.id}
-            className="relative group w-[105px] h-[105px]"
+            className="relative group w-20 h-20 md:w-[105px] md:h-[105px]"
           >
             <img 
               src={char.circleImage ? `/Characters/Circles/${char.circleImage}` : `/Characters/${char.image}`}
@@ -114,19 +116,26 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank }: T
               className="w-full h-full object-cover"
             />
             {/* Hover overlay with rank and name */}
-            <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-0 group-hover:delay-10 flex flex-col items-center justify-center text-white text-xs font-bold pointer-events-none">
+            <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-0 group-hover:delay-10 flex flex-col items-center justify-center text-white text-[10px] md:text-xs font-bold pointer-events-none">
               <span className="text-primary">#{startRank + index}</span>
-              <span className="text-center px-1">{char.name}</span>
+              <span className="text-center px-1 leading-tight">{char.name}</span>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Zoetrope - Bottom Right of Lowest Tier */}
+      {isLast && (
+        <div className="absolute bottom-2 right-2 z-10 opacity-20 hover:opacity-100 transition-opacity duration-500 pointer-events-auto">
+          <img src="/zoetrope.png" alt="Zoetrope" className="w-16 h-16 object-contain " />
+        </div>
+      )}
     </div>
   )
 })
 
 function Leaderboard() {
-  const [data, setData] = useState<Character[]>([])
+  const [data, setData] = useState<Array<Character>>([])
   const [loading, setLoading] = useState(true)
   const [tierConfig, setTierConfig] = useState(DEFAULT_TIER_CONFIG)
   const [confirmText, setConfirmText] = useState('')
@@ -230,9 +239,20 @@ function Leaderboard() {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium leading-none">Tier Configuration</h4>
-                      <div className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary/20 text-primary rounded border border-primary/30 flex items-center">
-                        {tierConfig.reduce((acc, t) => acc + t.count, 0)}/{data.length}
-                      </div>
+                      {(() => {
+                        const totalCount = tierConfig.reduce((acc, t) => acc + t.count, 0)
+                        const showWarning = totalCount < data.length
+                        return (
+                          <div className={cn(
+                            "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border flex items-center transition-colors",
+                            showWarning 
+                              ? "bg-destructive/20 text-destructive border-destructive/30" 
+                              : "bg-primary/20 text-primary border-primary/30"
+                          )}>
+                            {totalCount}/{data.length}
+                          </div>
+                        )
+                      })()}
                     </div>
                     <Button variant="ghost" size="sm" onClick={resetTierConfig} className="text-xs hover:text-primary transition-colors">
                       Reset
@@ -353,6 +373,7 @@ function Leaderboard() {
                 color={tier.color}
                 characters={tier.characters}
                 startRank={(tier as any).startRank}
+                isLast={index === tiersWithCharacters.length - 1}
               />
             ))
           )}

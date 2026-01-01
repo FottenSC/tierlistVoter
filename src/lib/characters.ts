@@ -1,4 +1,4 @@
-import { Character } from './types'
+import type { Character } from './types'
 
 // Initial stats for new characters
 const INITIAL_RATING = 1500
@@ -17,7 +17,7 @@ const createChar = (id: number, name: string, image: string, circleImage: string
   flippable
 })
 
-export const characters: Character[] = [
+export const characters: Array<Character> = [
   createChar(1, '2B', '2B.png', '2B-0.png', true),
   createChar(2, 'Amy', 'Amy.png', 'amy-1.png', true),
   createChar(3, 'Astaroth', 'Astaroth.png', 'astaroth-2.png', true),
@@ -27,7 +27,7 @@ export const characters: Character[] = [
   createChar(7, 'Taki', 'Taki.png', 'taki-21.png', true) ,
   createChar(8, 'Talim', 'Talim.png', 'talim-22.png', true),
   createChar(9, 'Geralt', 'Geralt.png', 'geralt-6.png', true),
-  createChar(10, 'Groh', 'Groh.png', 'grøh-7.png', true),
+  createChar(10, 'Groh', 'Groh.png', 'groh-7.png', true),
   createChar(11, 'Haomaru', 'Haomaru.png', 'haomaru-8.png', true),
   createChar(12, 'Hilde', 'Hilde.png', 'hilde-9.png', true),
   createChar(13, 'Hwang', 'Hwang.png', 'hwang-10.png', true),
@@ -37,7 +37,7 @@ export const characters: Character[] = [
   createChar(17, 'Mitsurugi', 'Mitsurugi.png', 'mitsurugi-14.png', false),
   createChar(18, 'Nightmare', 'Nightmare.png', 'nightmare-15.png', false),
   createChar(19, 'Raphael', 'Raphael.png', 'raphael-16.png', true),
-  createChar(20, 'Seong Mina', 'Seong Mina.png', 'seong_mina-17.png', true),
+  createChar(20, 'Seong Mina', 'SeongMina.png', 'seong_mina-17.png', true),
   createChar(21, 'Setsuka', 'Setsuka.png', 'setsuka-18.png', true),
   createChar(22, 'Siegfried', 'Siegfried.png', 'siegfried-19.png', false),
   createChar(23, 'Sophitia', 'Sophitia.png', 'sophitia-20.png', false),

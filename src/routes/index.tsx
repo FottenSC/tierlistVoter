@@ -1,21 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import type { Character } from '@/lib/types'
 import { characters as initialCharacters } from '@/lib/characters'
-import { Character } from '@/lib/types'
 import { calculateNewRatings } from '@/lib/glicko'
 import { VoteCard } from '@/components/vote-card'
 import { SpeedSelector } from '@/components/speed-selector'
 import { useSpeed } from '@/lib/speed-context'
-import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Helper to get persistence from localStorage
-const getStoredCharacters = (): Character[] => {
+const getStoredCharacters = (): Array<Character> => {
     if (typeof window === 'undefined') return initialCharacters
     const stored = localStorage.getItem('characters-data')
     if (stored) {
         try {
-            const parsed = JSON.parse(stored) as Character[]
+            const parsed = JSON.parse(stored) as Array<Character>
             // Merge with initial characters to ensure new properties (like circleImage) are present
             return initialCharacters.map(initial => {
                 const found = parsed.find(p => p.id === initial.id)
@@ -31,10 +31,26 @@ const getStoredCharacters = (): Character[] => {
     return initialCharacters
 }
 
-const saveCharacters = (chars: Character[]) => {
+const saveCharacters = (chars: Array<Character>) => {
     if (typeof window !== 'undefined') {
         localStorage.setItem('characters-data', JSON.stringify(chars))
     }
+}
+
+const generatePair = (chars: Array<Character>): [Character, Character] => {
+    const idx1 = Math.floor(Math.random() * chars.length)
+    let idx2 = Math.floor(Math.random() * chars.length)
+    while (idx1 === idx2) {
+      idx2 = Math.floor(Math.random() * chars.length)
+    }
+    return [chars[idx1], chars[idx2]]
+}
+
+const prefetchImages = (chars: [Character, Character]) => {
+    chars.forEach(c => {
+        const img = new Image()
+        img.src = `/Characters/${c.image}`
+    })
 }
 
 export const Route = createFileRoute('/') ({
@@ -42,36 +58,28 @@ export const Route = createFileRoute('/') ({
 })
 
 function Index() {
-  const [characters, setCharacters] = useState<Character[]>(getStoredCharacters)
+  const [characters, setCharacters] = useState<Array<Character>>(getStoredCharacters)
   const [pair, setPair] = useState<[Character, Character] | null>(null)
+  const [nextPair, setNextPair] = useState<[Character, Character] | null>(null)
   const [loading, setLoading] = useState(true)
   const [voteState, setVoteState] = useState<'idle' | 'voting' | 'success'>('idle')
   const [lastResult, setLastResult] = useState<{ winnerId: number; loserId: number } | null>(null)
   const [previousRanks, setPreviousRanks] = useState<{ [id: number]: number }>({})
   const { getTickerDuration, getTransitionDelay } = useSpeed()
 
-  // Pick 2 randoms from our state
-  const fetchNewPair = useCallback(() => {
-    setLoading(true)
-    setLastResult(null)
-    setVoteState('idle')
-    setPreviousRanks({})
-    
-    const idx1 = Math.floor(Math.random() * characters.length)
-    let idx2 = Math.floor(Math.random() * characters.length)
-    while (idx1 === idx2) {
-      idx2 = Math.floor(Math.random() * characters.length)
-    }
-
-    setPair([characters[idx1], characters[idx2]])
-    setLoading(false)
-  }, [characters])
-
   useEffect(() => {
-    fetchNewPair()
+    // Initial setup
+    const p1 = generatePair(characters)
+    setPair(p1)
+    
+    const p2 = generatePair(characters)
+    setNextPair(p2)
+    prefetchImages(p2)
+    
+    setLoading(false)
   }, []) // Pick once on mount
 
-  const handleVote = async (winner: Character, loser: Character) => {
+  const handleVote = (winner: Character, loser: Character) => {
     if (voteState !== 'idle' || !pair) return
     
     // Store previous ranks before vote
@@ -111,7 +119,25 @@ function Index() {
 
     // Use speed context for transition delay
     setTimeout(() => {
-        fetchNewPair()
+        setLastResult(null)
+        setVoteState('idle')
+        setPreviousRanks({})
+        
+        let currentNextPair = nextPair
+        if (!currentNextPair) {
+             currentNextPair = generatePair(updatedChars)
+        }
+
+        // Refresh data for the new pair from updatedChars
+        const p1 = updatedChars.find(c => c.id === currentNextPair[0].id) || currentNextPair[0]
+        const p2 = updatedChars.find(c => c.id === currentNextPair[1].id) || currentNextPair[1]
+        
+        setPair([p1, p2])
+        
+        // Generate and prefetch the pair after that
+        const newNext = generatePair(updatedChars)
+        setNextPair(newNext)
+        prefetchImages(newNext)
     }, getTransitionDelay()) 
   }
 
@@ -153,7 +179,7 @@ function Index() {
   const tickerDuration = getTickerDuration()
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full flex relative bg-background overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col md:flex-row relative bg-background overflow-hidden">
       
       {/* Speed Selector - Top Right */}
       <div className="absolute top-4 right-4 z-40">
@@ -177,19 +203,19 @@ function Index() {
       </div>
 
       {/* Versus Text (Overlay) / Result Ticker */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex flex-col items-center justify-center gap-2">
-          <div className="h-40 w-[1px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+      <div className="absolute inset-0 z-20 pointer-events-none flex md:flex-col items-center justify-center gap-2 md:gap-2">
+          <div className="w-20 md:w-[1px] h-[1px] md:h-40 bg-gradient-to-r md:bg-gradient-to-b from-transparent via-primary to-transparent opacity-80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
           
           <div className="relative h-32 flex items-center justify-center">
               <span className={cn(
-                  "text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fcd34d] to-[#b45309] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)] tracking-widest scale-125 transition-all duration-500",
+                  "text-6xl md:text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fcd34d] to-[#b45309] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)] tracking-widest scale-125 transition-all duration-500",
                   voteState !== 'idle' ? "opacity-0 scale-150 rotate-12" : "opacity-100"
               )}>
                   VS
               </span>
           </div>
 
-          <div className="h-40 w-[1px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+          <div className="w-20 md:w-[1px] h-[1px] md:h-40 bg-gradient-to-r md:bg-gradient-to-b from-transparent via-primary to-transparent opacity-80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
           
       </div>
 
