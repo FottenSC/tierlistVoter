@@ -51,6 +51,33 @@ const prefetchImages = (chars: [Character, Character]) => {
 
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      {
+        title: 'Tierlist Voter',
+      },
+      {
+        name: 'description',
+        content: 'Vote on character matchups.',
+      },
+      {
+        property: 'og:title',
+        content: 'Tierlist Voter',
+      },
+      {
+        property: 'og:description',
+        content: 'Vote on character matchups.',
+      },
+      {
+        property: 'og:image',
+        content: '/og-image.png',
+      },
+      {
+        name: 'twitter:image',
+        content: '/og-image.png',
+      },
+    ],
+  }),
 });
 
 function Index() {
@@ -306,11 +333,10 @@ function Index() {
       <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
         <div className="z-10 text-center space-y-8 p-8 max-w-2xl">
           <h1 className="text-6xl md:text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fcd34d] to-[#b45309] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)] tracking-widest">
-            ALL DONE!
+            FINISHED
           </h1>
           <p className="text-xl md:text-2xl text-white/70 font-serif italic tracking-wide">
-            You've completed all possible matches. Your tier list is now fully
-            calibrated.
+            You've completed all matches.
           </p>
           <div className="flex justify-center pt-8 gap-4">
             <button

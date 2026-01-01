@@ -95,6 +95,33 @@ const getStoredTierConfig = (): Array<TierConfig> => {
 
 export const Route = createFileRoute('/leaderboard')({
   component: Leaderboard,
+  head: () => ({
+    meta: [
+      {
+        title: 'Tierlist Voter',
+      },
+      {
+        name: 'description',
+        content: 'View the tier list.',
+      },
+      {
+        property: 'og:title',
+        content: 'Tierlist Voter',
+      },
+      {
+        property: 'og:description',
+        content: 'View the tier list.',
+      },
+      {
+        property: 'og:image',
+        content: '/og-image.png',
+      },
+      {
+        name: 'twitter:image',
+        content: '/og-image.png',
+      },
+    ],
+  }),
 })
 
 interface TierRowProps {

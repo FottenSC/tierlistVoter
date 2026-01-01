@@ -19,11 +19,71 @@ export const Route = createRootRoute({
       {
         title: 'Tierlist Voter',
       },
+      {
+        name: 'description',
+        content: 'Vote on character matchups to generate a tier list.',
+      },
+      {
+        name: 'keywords',
+        content: 'tier list, voting, ranking',
+      },
+      {
+        name: 'theme-color',
+        content: '#ea7308',
+      },
+      {
+        property: 'og:title',
+        content: 'Tierlist Voter',
+      },
+      {
+        property: 'og:description',
+        content: 'Vote on character matchups to generate a tier list.',
+      },
+      {
+        property: 'og:image',
+        content: '/og-image.png',
+      },
+      {
+        property: 'og:type',
+        content: 'website',
+      },
+      {
+        property: 'og:site_name',
+        content: 'Tierlist Voter',
+      },
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+      {
+        name: 'twitter:title',
+        content: 'Tierlist Voter',
+      },
+      {
+        name: 'twitter:description',
+        content: 'Vote on character matchups to generate a tier list.',
+      },
+      {
+        name: 'twitter:image',
+        content: '/og-image.png',
+      },
     ],
     links: [
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'icon',
+        href: '/favicon.ico',
+      },
+      {
+        rel: 'apple-touch-icon',
+        href: '/logo192.png',
+      },
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
       },
     ],
   }),
@@ -38,15 +98,15 @@ function NotFound() {
       <div className="max-w-md space-y-6">
         <h1 className="text-8xl font-serif font-black tracking-tighter text-primary drop-shadow-[0_0_20px_rgba(var(--primary),0.5)]">404</h1>
         <div className="space-y-2">
-          <h2 className="text-2xl font-serif font-bold uppercase tracking-widest text-foreground">A New Tale of Swords and Souls...</h2>
-          <p className="text-muted-foreground text-lg">But this page is lost in the stage of history.</p>
+          <h2 className="text-2xl font-serif font-bold uppercase tracking-widest text-foreground">Page Not Found</h2>
+          <p className="text-muted-foreground text-lg">This page doesn't exist.</p>
         </div>
         <div className="pt-8">
           <a 
             href="/" 
             className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-sm font-bold text-primary-foreground shadow transition-all hover:bg-primary/90 hover:scale-105 active:scale-95 uppercase tracking-widest"
           >
-            Return to Battle
+            Go Home
           </a>
         </div>
       </div>
