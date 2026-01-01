@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { memo, useDeferredValue, useEffect, useMemo, useState, useRef } from 'react'
-import { RotateCcw, Settings2, X, Share2 } from "lucide-react"
+import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { RotateCcw, Settings2, Share2, X } from "lucide-react"
 import { snapdom } from '@zumer/snapdom'
 import { toast } from 'sonner'
 import type { Character } from '@/lib/types'
@@ -60,7 +60,13 @@ const getStoredCharacters = (): Array<Character> => {
 }
 
 // Default tier configuration
-const DEFAULT_TIER_CONFIG = [
+interface TierConfig {
+  label: string
+  count: number | string
+  color: string
+}
+
+const DEFAULT_TIER_CONFIG: Array<TierConfig> = [
   { label: 'S', count: 5, color: '#FF7F7F' },
   { label: 'A', count: 6, color: '#FFBF7F' },
   { label: 'B', count: 6, color: '#FFDF7F' },
@@ -69,7 +75,7 @@ const DEFAULT_TIER_CONFIG = [
 ]
 
 // Get stored tier config
-const getStoredTierConfig = () => {
+const getStoredTierConfig = (): Array<TierConfig> => {
   if (typeof window === 'undefined') return DEFAULT_TIER_CONFIG
   const stored = localStorage.getItem('tier-config')
   if (stored) {
@@ -137,21 +143,21 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
 })
 
 function Leaderboard() {
-  const [data, setData] = useState<Array<Character>>([])
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<Array<Character>>(() => {
+    const chars = getStoredCharacters()
+    return [...chars].sort((a, b) => b.rating - a.rating)
+  })
   const [sharing, setSharing] = useState(false)
-  const [tierConfig, setTierConfig] = useState(DEFAULT_TIER_CONFIG)
+  const [tierConfig, setTierConfig] = useState<Array<TierConfig>>(getStoredTierConfig)
   const [confirmText, setConfirmText] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const tierlistRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Fetch from localStorage
-    const chars = getStoredCharacters()
-    setData([...chars].sort((a, b) => b.rating - a.rating))
+    // Sync state if localStorage changes (optional but good for consistency)
+    setData([...getStoredCharacters()].sort((a, b) => b.rating - a.rating))
     setTierConfig(getStoredTierConfig())
-    setLoading(false)
   }, [])
 
   const handleReset = () => {
@@ -163,9 +169,13 @@ function Leaderboard() {
     toast.success('All character data has been reset.')
   }
 
-  const handleTierCountChange = (index: number, newCount: number) => {
+  const handleTierCountChange = (index: number, value: string) => {
     const newConfig = [...tierConfig]
-    newConfig[index] = { ...newConfig[index], count: Math.max(1, Math.min(28, newCount)) }
+    let count: number | string = value
+    if (value !== '') {
+      count = Math.max(1, Math.min(28, parseInt(value) || 1))
+    }
+    newConfig[index] = { ...newConfig[index], count: count as any }
     setTierConfig(newConfig)
     localStorage.setItem('tier-config', JSON.stringify(newConfig))
   }
@@ -213,57 +223,53 @@ function Leaderboard() {
         embedFonts: true,
       })
       
-      if (blob) {
-        const previewUrl = URL.createObjectURL(blob)
-        
-        // Try to copy to clipboard first
-        if (navigator.clipboard && window.ClipboardItem) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                [blob.type]: blob
-              })
-            ])
-            toast.success('Tierlist copied to clipboard!', {
-              description: (
-                <div className="mt-2 border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
-                  <img 
-                    src={previewUrl} 
-                    alt="Tierlist Preview" 
-                    className="w-full h-auto max-h-40 object-contain block"
-                  />
-                </div>
-              ),
-              duration: 1000,
-            })
-            return
-          } catch (clipboardErr) {
-            console.error('Clipboard copy failed:', clipboardErr)
-          }
-        }
-        
-        // Fallback to download if clipboard fails or is not supported
-        const link = document.createElement('a')
-        link.href = previewUrl
-        link.download = 'tierlist.png'
-        link.click()
-        
-        toast.info('Tierlist downloaded!', {
+      const previewUrl = URL.createObjectURL(blob)
+      
+      // Try to copy to clipboard first
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [blob.type]: blob
+          })
+        ])
+        toast.success('Tierlist copied to clipboard!', {
           description: (
-            <div className="space-y-2">
-              <p className="text-xs opacity-70">Clipboard copy not supported in this browser.</p>
-              <div className="border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
-                <img 
-                  src={previewUrl} 
-                  alt="Tierlist Preview" 
-                  className="w-full h-auto max-h-40 object-contain block"
-                />
-              </div>
+            <div className="mt-2 border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
+              <img 
+                src={previewUrl} 
+                alt="Tierlist Preview" 
+                className="w-full h-auto max-h-40 object-contain block"
+              />
             </div>
           ),
           duration: 5000,
         })
+        return
+      } catch (clipboardErr) {
+        console.error('Clipboard copy failed:', clipboardErr)
       }
+      
+      // Fallback to download if clipboard fails or is not supported
+      const link = document.createElement('a')
+      link.href = previewUrl
+      link.download = 'tierlist.png'
+      link.click()
+      
+      toast.info('Tierlist downloaded!', {
+        description: (
+          <div className="space-y-2">
+            <p className="text-xs opacity-70">Clipboard copy not supported in this browser.</p>
+            <div className="border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
+              <img 
+                src={previewUrl} 
+                alt="Tierlist Preview" 
+                className="w-full h-auto max-h-40 object-contain block"
+              />
+            </div>
+          </div>
+        ),
+        duration: 5000,
+      })
     } catch (err) {
       console.error('Failed to share tierlist:', err)
       toast.error('Failed to capture tierlist. Please try again.')
@@ -279,9 +285,10 @@ function Leaderboard() {
   const tiersWithCharacters = useMemo(() => {
     let currentIndex = 0
     return deferredTierConfig.map((tier) => {
-      const tierCharacters = data.slice(currentIndex, currentIndex + tier.count)
+      const count = typeof tier.count === 'number' ? tier.count : (parseInt(tier.count) || 0)
+      const tierCharacters = data.slice(currentIndex, currentIndex + count)
       const startRank = currentIndex + 1
-      currentIndex += tier.count
+      currentIndex += count
       return {
         ...tier,
         characters: tierCharacters,
@@ -326,7 +333,7 @@ function Leaderboard() {
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium leading-none">Tier Configuration</h4>
                       {(() => {
-                        const totalCount = tierConfig.reduce((acc, t) => acc + t.count, 0)
+                        const totalCount = tierConfig.reduce((acc: number, t: TierConfig) => acc + (typeof t.count === 'number' ? t.count : (parseInt(t.count) || 0)), 0)
                         const showWarning = totalCount < data.length
                         return (
                           <div className={cn(
@@ -345,7 +352,7 @@ function Leaderboard() {
                     </Button>
                   </div>
                   <div className="space-y-3">
-                    {tierConfig.map((tier, index) => (
+                    {tierConfig.map((tier: TierConfig, index: number) => (
                       <div key={index} className="flex items-center gap-2 p-2 rounded bg-muted/50">
                         <input
                           type="color"
@@ -369,7 +376,7 @@ function Leaderboard() {
                               min={1}
                               max={28}
                               value={tier.count}
-                              onChange={(e) => handleTierCountChange(index, parseInt(e.target.value) || 1)}
+                              onChange={(e) => handleTierCountChange(index, e.target.value)}
                               className="h-8 text-sm bg-background border-2 border-muted-foreground/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all font-medium flex-1"
                             />
                           </div>
@@ -448,20 +455,16 @@ function Leaderboard() {
         <div ref={tierlistRef} className="rounded-lg overflow-hidden border border-black/50 shadow-2xl">
           
           {/* Tier rows */}
-          {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading...</div>
-          ) : (
-            tiersWithCharacters.map((tier, index) => (
-              <TierRow
-                key={index}
-                label={tier.label}
-                color={tier.color}
-                characters={tier.characters}
-                startRank={(tier as any).startRank}
-                isLast={index === tiersWithCharacters.length - 1}
-              />
-            ))
-          )}
+          {tiersWithCharacters.map((tier, index: number) => (
+            <TierRow
+              key={index}
+              label={tier.label}
+              color={tier.color}
+              characters={tier.characters}
+              startRank={tier.startRank}
+              isLast={index === tiersWithCharacters.length - 1}
+            />
+          ))}
         </div>
       </div>
     </div>
