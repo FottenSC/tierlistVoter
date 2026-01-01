@@ -446,7 +446,7 @@ function Index() {
             voteState !== "idle" ? "opacity-0" : "opacity-100",
           )}
         >
-          <div className="flex items-center gap-4">
+          <div className="relative flex items-center justify-center">
             <div className="flex flex-col items-center gap-1">
               <div className="text-[10px] font-mono text-primary/40 uppercase tracking-[0.3em]">
                 Matches Completed
@@ -461,13 +461,15 @@ function Index() {
             </div>
 
             {previousState && (
-              <button
-                onClick={handleUndo}
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/40 hover:text-white/70 transition-all pointer-events-auto group"
-                title="Undo last match (Ctrl+Z)"
-              >
-                <RotateCcw className="w-4 h-4 group-hover:rotate-[-45deg] transition-transform" />
-              </button>
+              <div className="absolute left-full ml-4">
+                <button
+                  onClick={handleUndo}
+                  className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/40 hover:text-white/70 transition-all pointer-events-auto group"
+                  title="Undo last match (Ctrl+Z)"
+                >
+                  <RotateCcw className="w-4 h-4 group-hover:rotate-[-45deg] transition-transform" />
+                </button>
+              </div>
             )}
           </div>
           <div className="w-32 h-0.5 bg-white/5 rounded-full overflow-hidden mt-1">
