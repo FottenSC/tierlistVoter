@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { RotateCcw, Settings2, Share2, X } from "lucide-react"
 import { snapdom } from '@zumer/snapdom'
 import { toast } from 'sonner'
 import type { Character } from '@/lib/types'
 import { characters as initialCharacters } from '@/lib/characters'
 import { useMatch } from '@/lib/match-context'
+import { CharacterDetailsModal } from "@/components/character-details-modal"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -102,9 +103,10 @@ interface TierRowProps {
   characters: Array<Character>
   startRank: number
   isLast?: boolean
+  onCharacterClick: (character: Character) => void
 }
 
-const TierRow = memo(function TierRow({ label, color, characters, startRank, isLast }: TierRowProps) {
+const TierRow = memo(function TierRow({ label, color, characters, startRank, isLast, onCharacterClick }: TierRowProps) {
   return (
     <div className="flex border-b border-black/50 last:border-b-0 relative">
       {/* Tier label */}
@@ -120,7 +122,8 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
         {characters.map((char, index) => (
           <div
             key={char.id}
-            className="relative group w-20 h-20 md:w-[105px] md:h-[105px]"
+            className="relative group w-20 h-20 md:w-[105px] md:h-[105px] cursor-pointer"
+            onClick={() => onCharacterClick(char)}
           >
             <img 
               src={char.circleImage ? `/Characters/Circles/${char.circleImage}` : `/Characters/${char.image}`}
@@ -163,6 +166,8 @@ function Leaderboard() {
   const [confirmText, setConfirmText] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const tierlistRef = useRef<HTMLDivElement>(null)
   const { resetQueue } = useMatch()
 
@@ -176,11 +181,17 @@ function Leaderboard() {
     }
   }, [])
 
+  const handleCharacterClick = useCallback((character: Character) => {
+    setSelectedCharacter(character)
+    setDetailsOpen(true)
+  }, [])
+
   const handleReset = () => {
     localStorage.removeItem('characters-data')
     localStorage.removeItem('match-queue')
     localStorage.removeItem('current-match-pair')
     localStorage.removeItem('next-match-pair')
+    localStorage.removeItem('match-history')
     resetQueue()
     const chars = getStoredCharacters()
     setData([...chars].sort((a, b) => b.rating - a.rating))
@@ -494,10 +505,18 @@ function Leaderboard() {
               characters={tier.characters}
               startRank={tier.startRank}
               isLast={index === tiersWithCharacters.length - 1}
+              onCharacterClick={handleCharacterClick}
             />
           ))}
         </div>
       </div>
+
+      <CharacterDetailsModal
+        character={selectedCharacter}
+        allCharacters={data}
+        isOpen={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+      />
     </div>
   )
 }

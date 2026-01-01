@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { Character } from "@/lib/types";
+import type { Character, Match } from "@/lib/types";
 import { characters as initialCharacters } from "@/lib/characters";
 import { calculateNewRatings } from "@/lib/glicko";
 import { VoteCard } from "@/components/vote-card";
@@ -107,6 +107,22 @@ function Index() {
       winner,
       loser,
     );
+
+    // Save match history
+    const newMatch: Match = {
+      winner_id: winner.id,
+      loser_id: loser.id,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      const storedMatches = localStorage.getItem("match-history");
+      const matches = storedMatches ? JSON.parse(storedMatches) : [];
+      matches.push(newMatch);
+      localStorage.setItem("match-history", JSON.stringify(matches));
+    } catch (e) {
+      console.error("Failed to save match history", e);
+    }
 
     // Update local state and save to localStorage
     const updatedChars = characters.map((c) => {
