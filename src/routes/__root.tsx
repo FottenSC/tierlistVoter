@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Navbar } from '@/components/navbar'
+import { Toaster } from '@/components/ui/sonner'
 import { SpeedProvider } from '@/lib/speed-context'
 import { MatchProvider } from '@/lib/match-context'
 import appCss from '../styles.css?url'
@@ -70,6 +71,7 @@ function RootComponent() {
             </div>
           </MatchProvider>
           <TanStackRouterDevtools position="bottom-right" />
+          <Toaster position="top-left" expand={false} />
         </SpeedProvider>
         <Scripts />
       </body>

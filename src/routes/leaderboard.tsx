@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { RotateCcw, Settings2, X } from "lucide-react"
+import { memo, useDeferredValue, useEffect, useMemo, useState, useRef } from 'react'
+import { RotateCcw, Settings2, X, Share2 } from "lucide-react"
+import { snapdom } from '@zumer/snapdom'
+import { toast } from 'sonner'
 import type { Character } from '@/lib/types'
 import { characters as initialCharacters } from '@/lib/characters'
 import { Button } from "@/components/ui/button"
@@ -137,10 +139,12 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
 function Leaderboard() {
   const [data, setData] = useState<Array<Character>>([])
   const [loading, setLoading] = useState(true)
+  const [sharing, setSharing] = useState(false)
   const [tierConfig, setTierConfig] = useState(DEFAULT_TIER_CONFIG)
   const [confirmText, setConfirmText] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const tierlistRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Fetch from localStorage
@@ -156,6 +160,7 @@ function Leaderboard() {
     setData([...chars].sort((a, b) => b.rating - a.rating))
     setConfirmText('')
     setIsOpen(false)
+    toast.success('All character data has been reset.')
   }
 
   const handleTierCountChange = (index: number, newCount: number) => {
@@ -197,7 +202,77 @@ function Leaderboard() {
     localStorage.setItem('tier-config', JSON.stringify(DEFAULT_TIER_CONFIG))
   }
 
-  // Use deferred value for the heavy list rendering to keep the UI responsive
+  const handleShare = async () => {
+    if (!tierlistRef.current) return
+    setSharing(true)
+    try {
+      const blob = await snapdom.toBlob(tierlistRef.current, {
+        type: 'png',
+        backgroundColor: '#1a1a1a',
+        scale: 2,
+        embedFonts: true,
+      })
+      
+      if (blob) {
+        const previewUrl = URL.createObjectURL(blob)
+        
+        // Try to copy to clipboard first
+        if (navigator.clipboard && window.ClipboardItem) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                [blob.type]: blob
+              })
+            ])
+            toast.success('Tierlist copied to clipboard!', {
+              description: (
+                <div className="mt-2 border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
+                  <img 
+                    src={previewUrl} 
+                    alt="Tierlist Preview" 
+                    className="w-full h-auto max-h-40 object-contain block"
+                  />
+                </div>
+              ),
+              duration: 1000,
+            })
+            return
+          } catch (clipboardErr) {
+            console.error('Clipboard copy failed:', clipboardErr)
+          }
+        }
+        
+        // Fallback to download if clipboard fails or is not supported
+        const link = document.createElement('a')
+        link.href = previewUrl
+        link.download = 'tierlist.png'
+        link.click()
+        
+        toast.info('Tierlist downloaded!', {
+          description: (
+            <div className="space-y-2">
+              <p className="text-xs opacity-70">Clipboard copy not supported in this browser.</p>
+              <div className="border border-primary/30 bg-black/20 p-0.5 shadow-inner overflow-hidden">
+                <img 
+                  src={previewUrl} 
+                  alt="Tierlist Preview" 
+                  className="w-full h-auto max-h-40 object-contain block"
+                />
+              </div>
+            </div>
+          ),
+          duration: 5000,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to share tierlist:', err)
+      toast.error('Failed to capture tierlist. Please try again.')
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  // Defer updates to tier config for performance
   const deferredTierConfig = useDeferredValue(tierConfig)
 
   // Calculate tier assignments
@@ -220,17 +295,28 @@ function Leaderboard() {
   return (
     <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-b from-muted via-muted/20 to-black">
       <div className="container py-8 max-w-7xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-2 gap-4">
           <h1 className="text-4xl font-serif font-bold tracking-widest text-primary uppercase drop-shadow-md">Your Tierlist</h1>
           
-          <div className="flex gap-2">
+          <div className="flex items-center -space-x-px">
+            {/* Share Button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleShare} 
+              disabled={sharing}
+              className="gap-2 text-muted-foreground hover:text-primary hover:border-primary transition-colors rounded-r-none"
+            >
+              <Share2 className={cn("h-4 w-4", sharing && "animate-spin")} />
+              {sharing ? 'Capturing...' : 'Share Tierlist'}
+            </Button>
+
             {/* Tier Settings */}
             <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <PopoverTrigger
                 render={
-                  <Button variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+                  <Button variant="outline" size="icon-sm" className="text-muted-foreground hover:text-primary hover:border-primary transition-colors rounded-none" title="Configure Tiers">
                     <Settings2 className="h-4 w-4" />
-                    Configure Tiers
                   </Button>
                 }
               />
@@ -311,9 +397,8 @@ function Leaderboard() {
             <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
               <AlertDialogTrigger 
                 render={
-                  <Button variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-destructive hover:border-destructive transition-colors">
+                  <Button variant="outline" size="icon-sm" className="text-muted-foreground hover:text-destructive hover:border-destructive transition-colors rounded-l-none" title="Reset All Characters">
                     <RotateCcw className="h-4 w-4" />
-                    Reset All Characters
                   </Button>
                 }
               />
@@ -360,7 +445,7 @@ function Leaderboard() {
         </div>
         
         {/* Tier List */}
-        <div className="rounded-lg overflow-hidden border border-black/50 shadow-2xl">
+        <div ref={tierlistRef} className="rounded-lg overflow-hidden border border-black/50 shadow-2xl">
           
           {/* Tier rows */}
           {loading ? (
