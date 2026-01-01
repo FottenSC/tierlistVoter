@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import confetti from "canvas-confetti";
 import type { Character, Match } from "@/lib/types";
 import { characters as initialCharacters } from "@/lib/characters";
 import { calculateNewRatings } from "@/lib/glicko";
@@ -75,7 +76,43 @@ function Index() {
     setNextPair,
     popNextPair,
     queueProgress,
+    isFinished,
+    resetQueue,
   } = useMatch();
+
+  useEffect(() => {
+    if (isFinished) {
+      const duration = 5 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) =>
+        Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        });
+      }, 250);
+
+      return () => clearInterval(interval);
+    }
+  }, [isFinished]);
 
   useEffect(() => {
     if (!hasHydratedGlobal) {
@@ -181,10 +218,13 @@ function Index() {
 
         // Generate and prefetch the pair after that
         const newNext = popNextPair(updatedChars);
+        setNextPair(newNext);
         if (newNext) {
-          setNextPair(newNext);
           prefetchImages(newNext);
         }
+      } else {
+        setCurrentPair(null);
+        setNextPair(null);
       }
     }, getTransitionDelay());
   };
@@ -208,6 +248,41 @@ function Index() {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isFinished) {
+    return (
+      <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
+        <div className="z-10 text-center space-y-8 p-8 max-w-2xl">
+          <h1 className="text-6xl md:text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-[#fcd34d] to-[#b45309] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)] tracking-widest">
+            ALL DONE!
+          </h1>
+          <p className="text-xl md:text-2xl text-white/70 font-serif italic tracking-wide">
+            You've completed all possible matches. Your tier list is now fully
+            calibrated.
+          </p>
+          <div className="flex flex-col md:flex-row gap-4 justify-center pt-8">
+            <button
+              onClick={() => (window.location.href = "/leaderboard")}
+              className="px-8 py-4 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto"
+            >
+              View Leaderboard
+            </button>
+            <button
+              onClick={() => resetQueue()}
+              className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/20 text-white/70 font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto"
+            >
+              Start Over
+            </button>
+          </div>
+        </div>
+
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px]" />
+        </div>
       </div>
     );
   }

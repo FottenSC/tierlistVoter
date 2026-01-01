@@ -13,6 +13,7 @@ interface MatchContextType {
     current: number
     total: number
   }
+  isFinished: boolean
 }
 
 const MatchContext = createContext<MatchContextType | undefined>(undefined)
@@ -75,45 +76,58 @@ export function MatchProvider({ children }: { children: ReactNode }) {
     if (!localStorage.getItem('match-queue') && queueRef.current.length === 0) {
       const newQueue = generateAllPairs(initialCharacters)
       
-      const id1 = newQueue[0]
-      const id2 = newQueue[1]
-      const remaining = newQueue.slice(2)
-      
-      queueRef.current = remaining
-      setQueueLength(remaining.length)
-      
-      const c1 = initialCharacters.find(c => c.id === id1[0])
-      const c2 = initialCharacters.find(c => c.id === id1[1])
-      const n1 = initialCharacters.find(c => c.id === id2[0])
-      const n2 = initialCharacters.find(c => c.id === id2[1])
+      if (newQueue.length > 0) {
+        const id1 = newQueue[0]
+        const id2 = newQueue[1]
+        const remaining = newQueue.slice(2)
+        
+        queueRef.current = remaining
+        setQueueLength(remaining.length)
+        
+        const c1 = initialCharacters.find(c => c.id === id1[0])
+        const c2 = initialCharacters.find(c => c.id === id1[1])
+        const n1 = id2 ? initialCharacters.find(c => c.id === id2[0]) : null
+        const n2 = id2 ? initialCharacters.find(c => c.id === id2[1]) : null
 
-      if (c1 && c2) setCurrentPair([c1, c2])
-      if (n1 && n2) setNextPair([n1, n2])
+        if (c1 && c2) {
+          setCurrentPair([c1, c2])
+          localStorage.setItem('current-match-pair', JSON.stringify([c1, c2]))
+        }
+        if (n1 && n2) {
+          setNextPair([n1, n2])
+          localStorage.setItem('next-match-pair', JSON.stringify([n1, n2]))
+        }
 
-      localStorage.setItem('match-queue', JSON.stringify(remaining))
-      if (c1 && c2) localStorage.setItem('current-match-pair', JSON.stringify([c1, c2]))
-      if (n1 && n2) localStorage.setItem('next-match-pair', JSON.stringify([n1, n2]))
+        localStorage.setItem('match-queue', JSON.stringify(remaining))
+      }
     }
   }, [])
 
   // Save current pair to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && currentPair) {
-      localStorage.setItem('current-match-pair', JSON.stringify(currentPair))
+    if (typeof window !== 'undefined') {
+      if (currentPair) {
+        localStorage.setItem('current-match-pair', JSON.stringify(currentPair))
+      } else {
+        localStorage.removeItem('current-match-pair')
+      }
     }
   }, [currentPair])
 
   // Save next pair to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && nextPair) {
-      localStorage.setItem('next-match-pair', JSON.stringify(nextPair))
+    if (typeof window !== 'undefined') {
+      if (nextPair) {
+        localStorage.setItem('next-match-pair', JSON.stringify(nextPair))
+      } else {
+        localStorage.removeItem('next-match-pair')
+      }
     }
   }, [nextPair])
 
   const popNextPair = useCallback((chars: Character[]): [Character, Character] | null => {
     if (queueRef.current.length === 0) {
-      // Regenerate if empty
-      queueRef.current = generateAllPairs(chars)
+      return null
     }
 
     const [id1, id2] = queueRef.current[0]
@@ -136,42 +150,62 @@ export function MatchProvider({ children }: { children: ReactNode }) {
 
   const resetQueue = useCallback(() => {
     const newQueue = generateAllPairs(initialCharacters)
-    queueRef.current = newQueue
-    setQueueLength(newQueue.length)
     
-    // Pick new initial pairs immediately
-    const id1 = newQueue[0]
-    const id2 = newQueue[1]
-    const remaining = newQueue.slice(2)
-    queueRef.current = remaining
-    setQueueLength(remaining.length)
+    if (newQueue.length > 0) {
+      // Pick new initial pairs immediately
+      const id1 = newQueue[0]
+      const id2 = newQueue[1]
+      const remaining = newQueue.slice(2)
+      queueRef.current = remaining
+      setQueueLength(remaining.length)
 
-    const c1 = initialCharacters.find(c => c.id === id1[0])
-    const c2 = initialCharacters.find(c => c.id === id1[1])
-    const n1 = initialCharacters.find(c => c.id === id2[0])
-    const n2 = initialCharacters.find(c => c.id === id2[1])
+      const c1 = initialCharacters.find(c => c.id === id1[0])
+      const c2 = initialCharacters.find(c => c.id === id1[1])
+      const n1 = id2 ? initialCharacters.find(c => c.id === id2[0]) : null
+      const n2 = id2 ? initialCharacters.find(c => c.id === id2[1]) : null
 
-    if (c1 && c2) setCurrentPair([c1, c2])
-    if (n1 && n2) setNextPair([n1, n2])
+      const cp: [Character, Character] | null = c1 && c2 ? [c1, c2] : null
+      const np: [Character, Character] | null = n1 && n2 ? [n1, n2] : null
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('match-queue', JSON.stringify(remaining))
-      if (c1 && c2) localStorage.setItem('current-match-pair', JSON.stringify([c1, c2]))
-      if (n1 && n2) localStorage.setItem('next-match-pair', JSON.stringify([n1, n2]))
+      setCurrentPair(cp)
+      setNextPair(np)
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('match-queue', JSON.stringify(remaining))
+        localStorage.setItem('current-match-pair', JSON.stringify(cp))
+        localStorage.setItem('next-match-pair', JSON.stringify(np))
+      }
+    } else {
+      setCurrentPair(null)
+      setNextPair(null)
+      queueRef.current = []
+      setQueueLength(0)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('match-queue')
+        localStorage.removeItem('current-match-pair')
+        localStorage.removeItem('next-match-pair')
+      }
     }
   }, [])
 
+  const isFinished = useMemo(() => {
+    return currentPair === null && nextPair === null && queueLength === 0
+  }, [currentPair, nextPair, queueLength])
+
   const queueProgress = useMemo(() => {
+    if (isFinished) {
+      return { current: totalMatches, total: totalMatches }
+    }
     // Number of matches actually finished (scored)
     const completed = totalMatches - queueLength - (currentPair ? 1 : 0) - (nextPair ? 1 : 0)
     return {
       current: Math.max(0, completed),
       total: totalMatches
     }
-  }, [queueLength, currentPair, nextPair, totalMatches])
+  }, [queueLength, currentPair, nextPair, totalMatches, isFinished])
 
   return (
-    <MatchContext.Provider value={{ currentPair, setCurrentPair, nextPair, setNextPair, popNextPair, resetQueue, queueProgress }}>
+    <MatchContext.Provider value={{ currentPair, setCurrentPair, nextPair, setNextPair, popNextPair, resetQueue, queueProgress, isFinished }}>
       {children}
     </MatchContext.Provider>
   )
