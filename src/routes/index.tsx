@@ -77,7 +77,6 @@ function Index() {
     popNextPair,
     queueProgress,
     isFinished,
-    resetQueue,
   } = useMatch();
 
   useEffect(() => {
@@ -263,18 +262,12 @@ function Index() {
             You've completed all possible matches. Your tier list is now fully
             calibrated.
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center pt-8">
+          <div className="flex justify-center pt-8">
             <button
               onClick={() => (window.location.href = "/leaderboard")}
-              className="px-8 py-4 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto"
+              className="px-12 py-4 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto text-lg"
             >
-              View Leaderboard
-            </button>
-            <button
-              onClick={() => resetQueue()}
-              className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/20 text-white/70 font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto"
-            >
-              Start Over
+              View Tier List
             </button>
           </div>
         </div>
