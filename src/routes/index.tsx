@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCcw } from "lucide-react";
 import confetti from "canvas-confetti";
 import type { Character, Match } from "@/lib/types";
 import { characters as initialCharacters } from "@/lib/characters";
@@ -68,6 +68,11 @@ function Index() {
   const [previousRanks, setPreviousRanks] = useState<{ [id: number]: number }>(
     {},
   );
+  const [previousState, setPreviousState] = useState<{
+    characters: Character[];
+    currentPair: [Character, Character];
+    nextPair: [Character, Character] | null;
+  } | null>(null);
   const { getTickerDuration, getTransitionDelay } = useSpeed();
   const {
     currentPair,
@@ -75,6 +80,7 @@ function Index() {
     nextPair,
     setNextPair,
     popNextPair,
+    pushToQueue,
     queueProgress,
     isFinished,
   } = useMatch();
@@ -124,6 +130,13 @@ function Index() {
 
   const handleVote = (winner: Character, loser: Character) => {
     if (voteState !== "idle" || !currentPair) return;
+
+    // Save state for undo
+    setPreviousState({
+      characters: [...characters],
+      currentPair: [...currentPair] as [Character, Character],
+      nextPair: nextPair ? ([...nextPair] as [Character, Character]) : null,
+    });
 
     // Store previous ranks before vote
     const sortedBefore = [...characters].sort((a, b) => b.rating - a.rating);
@@ -228,20 +241,57 @@ function Index() {
     }, getTransitionDelay());
   };
 
+  const handleUndo = () => {
+    if (!previousState || voteState !== "idle") return;
+
+    // Restore characters
+    setCharacters(previousState.characters);
+    saveCharacters(previousState.characters);
+
+    // Restore match history (remove last)
+    try {
+      const storedMatches = localStorage.getItem("match-history");
+      if (storedMatches) {
+        const matches = JSON.parse(storedMatches);
+        matches.pop();
+        localStorage.setItem("match-history", JSON.stringify(matches));
+      }
+    } catch (e) {
+      console.error("Failed to undo match history", e);
+    }
+
+    // Restore queue state
+    // If we had a nextPair in the current state that wasn't in the previous state,
+    // it means it was popped from the queue. We need to push it back.
+    if (nextPair && (!previousState.nextPair || nextPair[0].id !== previousState.nextPair[0].id)) {
+      pushToQueue([nextPair[0].id, nextPair[1].id]);
+    }
+
+    setCurrentPair(previousState.currentPair);
+    setNextPair(previousState.nextPair);
+    setPreviousState(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (voteState !== "idle" || !currentPair) return;
+      if (voteState !== "idle") return;
 
-      if (e.key === "ArrowLeft") {
-        handleVote(currentPair[0], currentPair[1]);
-      } else if (e.key === "ArrowRight") {
-        handleVote(currentPair[1], currentPair[0]);
+      if (!isFinished && currentPair) {
+        if (e.key === "ArrowLeft") {
+          handleVote(currentPair[0], currentPair[1]);
+        } else if (e.key === "ArrowRight") {
+          handleVote(currentPair[1], currentPair[0]);
+        }
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        handleUndo();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPair, voteState, handleVote]);
+  }, [currentPair, voteState, handleVote, previousState, isFinished]);
 
   if (!currentPair && loading) {
     return (
@@ -262,13 +312,22 @@ function Index() {
             You've completed all possible matches. Your tier list is now fully
             calibrated.
           </p>
-          <div className="flex justify-center pt-8">
+          <div className="flex justify-center pt-8 gap-4">
             <button
               onClick={() => (window.location.href = "/leaderboard")}
               className="px-12 py-4 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto text-lg"
             >
               View Tier List
             </button>
+            {previousState && (
+              <button
+                onClick={handleUndo}
+                className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/20 text-white/50 font-serif uppercase tracking-widest transition-all rounded-lg backdrop-blur-sm pointer-events-auto flex items-center gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                Undo Last Match
+              </button>
+            )}
           </div>
         </div>
 
@@ -387,15 +446,29 @@ function Index() {
             voteState !== "idle" ? "opacity-0" : "opacity-100",
           )}
         >
-          <div className="text-[10px] font-mono text-primary/40 uppercase tracking-[0.3em]">
-            Matches Completed
-          </div>
-          <div className="text-xs font-serif text-white/30 tracking-widest uppercase">
-            <span className="text-primary/60 font-bold">
-              {queueProgress.current}
-            </span>
-            <span className="mx-2">/</span>
-            <span>{queueProgress.total}</span>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-[10px] font-mono text-primary/40 uppercase tracking-[0.3em]">
+                Matches Completed
+              </div>
+              <div className="text-xs font-serif text-white/30 tracking-widest uppercase">
+                <span className="text-primary/60 font-bold">
+                  {queueProgress.current}
+                </span>
+                <span className="mx-2">/</span>
+                <span>{queueProgress.total}</span>
+              </div>
+            </div>
+
+            {previousState && (
+              <button
+                onClick={handleUndo}
+                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/40 hover:text-white/70 transition-all pointer-events-auto group"
+                title="Undo last match (Ctrl+Z)"
+              >
+                <RotateCcw className="w-4 h-4 group-hover:rotate-[-45deg] transition-transform" />
+              </button>
+            )}
           </div>
           <div className="w-32 h-0.5 bg-white/5 rounded-full overflow-hidden mt-1">
             <div

@@ -8,6 +8,7 @@ interface MatchContextType {
   nextPair: [Character, Character] | null
   setNextPair: (pair: [Character, Character] | null) => void
   popNextPair: (chars: Character[]) => [Character, Character] | null
+  pushToQueue: (pair: [number, number]) => void
   resetQueue: () => void
   queueProgress: {
     current: number
@@ -148,6 +149,14 @@ export function MatchProvider({ children }: { children: ReactNode }) {
     return popNextPair(chars)
   }, [])
 
+  const pushToQueue = useCallback((pair: [number, number]) => {
+    queueRef.current = [pair, ...queueRef.current]
+    setQueueLength(queueRef.current.length)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('match-queue', JSON.stringify(queueRef.current))
+    }
+  }, [])
+
   const resetQueue = useCallback(() => {
     const newQueue = generateAllPairs(initialCharacters)
     
@@ -205,7 +214,7 @@ export function MatchProvider({ children }: { children: ReactNode }) {
   }, [queueLength, currentPair, nextPair, totalMatches, isFinished])
 
   return (
-    <MatchContext.Provider value={{ currentPair, setCurrentPair, nextPair, setNextPair, popNextPair, resetQueue, queueProgress, isFinished }}>
+    <MatchContext.Provider value={{ currentPair, setCurrentPair, nextPair, setNextPair, popNextPair, pushToQueue, resetQueue, queueProgress, isFinished }}>
       {children}
     </MatchContext.Provider>
   )
