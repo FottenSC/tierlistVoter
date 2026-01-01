@@ -8,11 +8,15 @@ import tailwindcss from '@tailwindcss/vite'
 const config = defineConfig({
   plugins: [
     devtools(),
+    tanstackStart({
+      server: {
+        preset: 'cloudflare-pages',
+      },
+    }),
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart(),
     viteReact({
       babel: {
         plugins: [
