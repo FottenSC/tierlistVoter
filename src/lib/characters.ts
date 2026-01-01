@@ -28,7 +28,7 @@ export const characters: Array<Character> = [
   createChar(8, 'Talim', 'Talim.png', 'talim-22.png', true),
   createChar(9, 'Geralt', 'Geralt.png', 'geralt-6.png', true),
   createChar(10, 'Groh', 'Groh.png', 'groh-7.png', true),
-  createChar(11, 'Haomaru', 'Haomaru.png', 'haomaru-8.png', true),
+  createChar(11, 'Haohmaru', 'Haohmaru.png', 'haohmaru-8.png', true),
   createChar(12, 'Hilde', 'Hilde.png', 'hilde-9.png', true),
   createChar(13, 'Hwang', 'Hwang.png', 'hwang-10.png', true),
   createChar(14, 'Ivy', 'Ivy.png', 'ivy-11.png', true),

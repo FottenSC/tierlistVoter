@@ -69,7 +69,7 @@ function Index() {
     {},
   );
   const [previousState, setPreviousState] = useState<{
-    characters: Character[];
+    characters: Array<Character>;
     currentPair: [Character, Character];
     nextPair: [Character, Character] | null;
   } | null>(null);

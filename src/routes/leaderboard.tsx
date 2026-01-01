@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RotateCcw, Settings2, Share2, X } from "lucide-react"
 import { snapdom } from '@zumer/snapdom'
 import { toast } from 'sonner'
@@ -141,7 +141,7 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
 
       {/* Zoetrope - Bottom Right of Lowest Tier */}
       {isLast && (
-        <div className="absolute bottom-2 right-2 z-10 opacity-20 hover:opacity-100 transition-opacity duration-500 pointer-events-auto">
+        <div className="absolute bottom-2 right-2 z-10 opacity-40 hover:opacity-100 transition-opacity duration-500 pointer-events-auto">
           <img src="/zoetrope.png" alt="Zoetrope" className="w-16 h-16 object-contain " />
         </div>
       )}
