@@ -1,1 +1,137 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    /* Soulcalibur VI UI Theme */
+    /* Background: Deep, warm, atmospheric darks */
+    --background: oklch(0.12 0.03 60); 
+    --foreground: oklch(0.95 0.02 85); /* Proper White/Cream for readability */
+    
+    /* Panels: Semi-transparent darks with a slight tint */
+    --card: oklch(0.15 0.02 60 / 0.85); 
+    --card-foreground: oklch(0.95 0.02 85);
+    
+    --popover: oklch(0.15 0.02 60 / 0.95);
+    --popover-foreground: oklch(0.95 0.02 85);
+    
+    /* Accents: The iconic SC6 Gold and Blue */
+    --primary: oklch(0.75 0.18 75); /* Bright Metallic Gold */
+    --primary-foreground: oklch(0.15 0.04 60);
+    
+    --secondary: oklch(0.45 0.15 260); /* The "Waiting" Blue */
+    --secondary-foreground: oklch(0.98 0 0);
+    
+    --muted: oklch(0.25 0.03 60);
+    --muted-foreground: oklch(0.75 0.05 80); /* Muted text is slightly golden/beige */
+    
+    --accent: oklch(0.30 0.05 60);
+    --accent-foreground: oklch(0.95 0.02 85);
+    
+    --destructive: oklch(0.45 0.20 25);
+    
+    /* Borders: Fine, sharp, metallic */
+    --border: oklch(0.50 0.05 80); 
+    --input: oklch(0.20 0.03 60);
+    --ring: oklch(0.75 0.18 75);
+    
+    --radius: 0.1rem; /* Very sharp, almost square corners */
+    
+    --sidebar: oklch(0.12 0.03 60);
+    --sidebar-foreground: oklch(0.95 0.02 85);
+    --sidebar-primary: oklch(0.75 0.18 75);
+    --sidebar-primary-foreground: oklch(0.15 0.04 60);
+    --sidebar-accent: oklch(0.25 0.03 60);
+    --sidebar-accent-foreground: oklch(0.95 0.02 85);
+    --sidebar-border: oklch(0.50 0.05 80);
+    --sidebar-ring: oklch(0.75 0.18 75);
+}
+
+.dark {
+    /* Keeping consistency in dark mode as the default */
+    --background: oklch(0.12 0.03 60); 
+    --foreground: oklch(0.95 0.02 85); 
+    --card: oklch(0.15 0.02 60 / 0.85); 
+    --card-foreground: oklch(0.95 0.02 85);
+    --popover: oklch(0.15 0.02 60 / 0.95);
+    --popover-foreground: oklch(0.95 0.02 85);
+    --primary: oklch(0.75 0.18 75); 
+    --primary-foreground: oklch(0.15 0.04 60);
+    --secondary: oklch(0.45 0.15 260); 
+    --secondary-foreground: oklch(0.98 0 0);
+    --muted: oklch(0.25 0.03 60);
+    --muted-foreground: oklch(0.75 0.05 80); 
+    --accent: oklch(0.30 0.05 60);
+    --accent-foreground: oklch(0.95 0.02 85);
+    --destructive: oklch(0.45 0.20 25);
+    --border: oklch(0.50 0.05 80); 
+    --input: oklch(0.20 0.03 60);
+    --ring: oklch(0.75 0.18 75);
+    --sidebar: oklch(0.12 0.03 60);
+    --sidebar-foreground: oklch(0.95 0.02 85);
+    --sidebar-primary: oklch(0.75 0.18 75);
+    --sidebar-primary-foreground: oklch(0.15 0.04 60);
+    --sidebar-accent: oklch(0.25 0.03 60);
+    --sidebar-accent-foreground: oklch(0.95 0.02 85);
+    --sidebar-border: oklch(0.50 0.05 80);
+    --sidebar-ring: oklch(0.75 0.18 75);
+}
+
+@theme inline {
+  --font-serif: "Cinzel", serif;
+  --font-sans: "Inter Variable", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply font-sans bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

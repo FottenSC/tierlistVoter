@@ -2,4 +2,16 @@
 
 import { tanstackConfig } from '@tanstack/eslint-config'
 
-export default [...tanstackConfig]
+import reactCompiler from 'eslint-plugin-react-compiler'
+
+export default [
+  ...tanstackConfig,
+  {
+    plugins: {
+      'react-compiler': reactCompiler,
+    },
+    rules: {
+      'react-compiler/react-compiler': 'error',
+    },
+  },
+]
