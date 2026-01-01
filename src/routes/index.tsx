@@ -7,6 +7,7 @@ import { calculateNewRatings } from '@/lib/glicko'
 import { VoteCard } from '@/components/vote-card'
 import { SpeedSelector } from '@/components/speed-selector'
 import { useSpeed } from '@/lib/speed-context'
+import { useMatch } from '@/lib/match-context'
 import { cn } from '@/lib/utils'
 
 // Helper to get persistence from localStorage
@@ -59,34 +60,38 @@ export const Route = createFileRoute('/') ({
 
 function Index() {
   const [characters, setCharacters] = useState<Array<Character>>(getStoredCharacters)
-  const [pair, setPair] = useState<[Character, Character] | null>(null)
-  const [nextPair, setNextPair] = useState<[Character, Character] | null>(null)
   const [loading, setLoading] = useState(true)
   const [voteState, setVoteState] = useState<'idle' | 'voting' | 'success'>('idle')
   const [lastResult, setLastResult] = useState<{ winnerId: number; loserId: number } | null>(null)
   const [previousRanks, setPreviousRanks] = useState<{ [id: number]: number }>({})
   const { getTickerDuration, getTransitionDelay } = useSpeed()
+  const { currentPair, setCurrentPair, nextPair, setNextPair } = useMatch()
 
   useEffect(() => {
     // Initial setup
-    const p1 = generatePair(characters)
-    setPair(p1)
-    
-    const p2 = generatePair(characters)
-    setNextPair(p2)
-    prefetchImages(p2)
-    
-    setLoading(false)
+    if (currentPair) {
+      // Use stored pair if available
+      setLoading(false)
+    } else {
+      const p1 = generatePair(characters)
+      setCurrentPair(p1)
+      
+      const p2 = generatePair(characters)
+      setNextPair(p2)
+      prefetchImages(p2)
+      
+      setLoading(false)
+    }
   }, []) // Pick once on mount
 
   const handleVote = (winner: Character, loser: Character) => {
-    if (voteState !== 'idle' || !pair) return
+    if (voteState !== 'idle' || !currentPair) return
     
     // Store previous ranks before vote
     const sortedBefore = [...characters].sort((a, b) => b.rating - a.rating)
     const prevRanks = {
-      [pair[0].id]: sortedBefore.findIndex(c => c.id === pair[0].id) + 1,
-      [pair[1].id]: sortedBefore.findIndex(c => c.id === pair[1].id) + 1,
+      [currentPair[0].id]: sortedBefore.findIndex(c => c.id === currentPair[0].id) + 1,
+      [currentPair[1].id]: sortedBefore.findIndex(c => c.id === currentPair[1].id) + 1,
     }
     setPreviousRanks(prevRanks)
     
@@ -111,10 +116,10 @@ function Index() {
 
         // Update the current pair with the new ratings so the ticker can animate
         const updatedPair: [Character, Character] = [
-            updatedChars.find(c => c.id === pair[0].id)!,
-            updatedChars.find(c => c.id === pair[1].id)!
+            updatedChars.find(c => c.id === currentPair[0].id)!,
+            updatedChars.find(c => c.id === currentPair[1].id)!
         ]
-        setPair(updatedPair)
+        setCurrentPair(updatedPair)
     }, updateDelay)
 
     // Use speed context for transition delay
@@ -132,7 +137,7 @@ function Index() {
         const p1 = updatedChars.find(c => c.id === currentNextPair[0].id) || currentNextPair[0]
         const p2 = updatedChars.find(c => c.id === currentNextPair[1].id) || currentNextPair[1]
         
-        setPair([p1, p2])
+        setCurrentPair([p1, p2])
         
         // Generate and prefetch the pair after that
         const newNext = generatePair(updatedChars)
@@ -143,20 +148,20 @@ function Index() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (voteState !== 'idle' || !pair) return
+      if (voteState !== 'idle' || !currentPair) return
       
       if (e.key === 'ArrowLeft') {
-        handleVote(pair[0], pair[1])
+        handleVote(currentPair[0], currentPair[1])
       } else if (e.key === 'ArrowRight') {
-        handleVote(pair[1], pair[0])
+        handleVote(currentPair[1], currentPair[0])
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [pair, voteState, handleVote])
+  }, [currentPair, voteState, handleVote])
 
-  if (!pair && loading) {
+  if (!currentPair && loading) {
     return (
         <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -164,7 +169,7 @@ function Index() {
     )
   }
 
-  if (!pair) return null
+  if (!currentPair) return null
 
   const sortedChars = [...characters].sort((a, b) => b.rating - a.rating)
   const getRank = (id: number) => sortedChars.findIndex(c => c.id === id) + 1
@@ -189,12 +194,12 @@ function Index() {
       {/* Left Character */}
       <div className="flex-1 relative h-full">
           <VoteCard 
-              character={pair[0]} 
-              rank={getRank(pair[0].id)}
-              rankChange={getRankChange(pair[0].id)}
-              onVote={() => handleVote(pair[0], pair[1])}
+              character={currentPair[0]} 
+              rank={getRank(currentPair[0].id)}
+              rankChange={getRankChange(currentPair[0].id)}
+              onVote={() => handleVote(currentPair[0], currentPair[1])}
               disabled={voteState !== 'idle'}
-              result={lastResult ? (lastResult.winnerId === pair[0].id ? 'win' : 'loss') : null}
+              result={lastResult ? (lastResult.winnerId === currentPair[0].id ? 'win' : 'loss') : null}
               variant="fullscreen"
               className="h-full rounded-none border-none"
               mirrored={true}
@@ -222,12 +227,12 @@ function Index() {
       {/* Right Character */}
       <div className="flex-1 relative h-full">
           <VoteCard 
-              character={pair[1]} 
-              rank={getRank(pair[1].id)}
-              rankChange={getRankChange(pair[1].id)}
-              onVote={() => handleVote(pair[1], pair[0])}
+              character={currentPair[1]} 
+              rank={getRank(currentPair[1].id)}
+              rankChange={getRankChange(currentPair[1].id)}
+              onVote={() => handleVote(currentPair[1], currentPair[0])}
               disabled={voteState !== 'idle'}
-              result={lastResult ? (lastResult.winnerId === pair[1].id ? 'win' : 'loss') : null}
+              result={lastResult ? (lastResult.winnerId === currentPair[1].id ? 'win' : 'loss') : null}
               variant="fullscreen"
               className="h-full rounded-none border-none"
               tickerDuration={tickerDuration}

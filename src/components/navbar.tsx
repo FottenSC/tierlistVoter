@@ -16,25 +16,25 @@ export function Navbar() {
             </span>
           </Link>
           
-          <div className="flex items-center gap-3 md:gap-6 text-[10px] md:text-sm font-serif tracking-wider">
+          <div className="flex items-center gap-2 md:gap-4 text-xs md:text-base font-serif tracking-wider flex-1 md:flex-initial">
             <Link 
               to="/" 
               className={cn(
-                "transition-all duration-300 hover:text-primary flex items-center gap-1 md:gap-2 uppercase font-bold",
+                "transition-all duration-300 hover:text-primary flex items-center gap-1.5 md:gap-2 uppercase font-bold px-2 md:px-3 py-1.5 md:py-2 rounded",
                 location.pathname === '/' ? "text-primary scale-105" : "text-muted-foreground"
               )}
             >
-              <Swords className="h-3 w-3 md:h-4 md:w-4" />
+              <Swords className="h-4 w-4 md:h-5 md:w-5" />
               Vote<span className="hidden sm:inline"> Area</span>
             </Link>
             <Link 
               to="/leaderboard" 
               className={cn(
-                "transition-all duration-300 hover:text-primary flex items-center gap-1 md:gap-2 uppercase font-bold",
+                "transition-all duration-300 hover:text-primary flex items-center gap-1.5 md:gap-2 uppercase font-bold px-2 md:px-3 py-1.5 md:py-2 rounded",
                 location.pathname === '/leaderboard' ? "text-primary scale-105" : "text-muted-foreground"
               )}
             >
-              <Trophy className="h-3 w-3 md:h-4 md:w-4" />
+              <Trophy className="h-4 w-4 md:h-5 md:w-5" />
               <span className="hidden sm:inline">Your </span>Tierlist
             </Link>
           </div>

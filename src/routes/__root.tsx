@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts } from '@tanstack/react-r
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Navbar } from '@/components/navbar'
 import { SpeedProvider } from '@/lib/speed-context'
+import { MatchProvider } from '@/lib/match-context'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -60,12 +61,14 @@ function RootComponent() {
       </head>
       <body>
         <SpeedProvider>
-          <div className="min-h-screen bg-background font-sans antialiased text-foreground flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              <Outlet />
-            </main>
-          </div>
+          <MatchProvider>
+            <div className="min-h-screen bg-background font-sans antialiased text-foreground flex flex-col">
+              <Navbar />
+              <main className="flex-1">
+                <Outlet />
+              </main>
+            </div>
+          </MatchProvider>
           <TanStackRouterDevtools position="bottom-right" />
         </SpeedProvider>
         <Scripts />
