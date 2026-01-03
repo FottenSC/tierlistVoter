@@ -138,7 +138,7 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
     <div className="flex border-b border-black/50 last:border-b-0 relative">
       {/* Tier label */}
       <div 
-        className="w-16 md:w-32 min-h-[85px] md:min-h-[110px] flex-shrink-0 flex items-center justify-center font-bold text-xl md:text-3xl text-[#333] border-r border-black/50"
+        className="w-16 md:w-32 min-h-[85px] md:min-h-[110px] flex-shrink-0 flex items-center justify-center text-center font-bold text-xl md:text-3xl text-[#333] border-r border-black/50 p-1"
         style={{ backgroundColor: color }}
       >
         {label}
@@ -168,7 +168,7 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
 
       {/* Zoetrope - Bottom Right of Lowest Tier */}
       {isLast && (
-        <div className="absolute bottom-2 right-2 z-10 opacity-40 hover:opacity-100 transition-opacity duration-500 pointer-events-auto">
+        <div className="absolute bottom-2 right-2 opacity-40 hover:opacity-100 transition-opacity duration-500 pointer-events-auto">
           <img src="/zoetrope.png" alt="Zoetrope" className="w-16 h-16 object-contain " />
         </div>
       )}
