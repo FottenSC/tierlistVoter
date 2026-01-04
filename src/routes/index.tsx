@@ -271,11 +271,8 @@ function Index() {
   const handleUndo = () => {
     if (!previousState || voteState !== "idle") return;
 
-    // Restore characters
     setCharacters(previousState.characters);
     saveCharacters(previousState.characters);
-
-    // Restore match history (remove last)
     try {
       const storedMatches = localStorage.getItem("match-history");
       if (storedMatches) {
