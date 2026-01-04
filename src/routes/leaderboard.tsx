@@ -73,9 +73,9 @@ interface TierConfig {
 
 const DEFAULT_TIER_CONFIG: Array<TierConfig> = [
   { label: 'S', count: 5, color: '#FF7F7F' },
-  { label: 'A', count: 6, color: '#FFBF7F' },
-  { label: 'B', count: 6, color: '#FFDF7F' },
-  { label: 'C', count: 6, color: '#FFFF7F' },
+  { label: 'A', count: 5, color: '#FFBF7F' },
+  { label: 'B', count: 5, color: '#FFDF7F' },
+  { label: 'C', count: 5, color: '#FFFF7F' },
   { label: 'D', count: 5, color: '#BFFF7F' },
   { label: 'E', count: 5, color: '#7FFF7F' },
 ]
