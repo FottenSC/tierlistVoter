@@ -48,10 +48,6 @@ export const Route = createRootRoute({
         content: 'website',
       },
       {
-        property: 'og:site_name',
-        content: 'Tierlist Voter',
-      },
-      {
         name: 'twitter:card',
         content: 'summary_large_image',
       },
