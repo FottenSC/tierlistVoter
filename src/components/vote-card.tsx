@@ -145,7 +145,7 @@ export function VoteCard({ character, onVote, disabled, className, result, varia
 
         <h3 className={cn(
             "font-serif font-bold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors",
-            isFullscreen ? "text-7xl shadow-black drop-shadow-2xl mb-2" : "text-lg"
+            isFullscreen ? "text-4xl md:text-7xl shadow-black drop-shadow-2xl mb-2" : "text-lg"
         )}>
           {character.name}
         </h3>

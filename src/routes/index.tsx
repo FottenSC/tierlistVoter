@@ -446,7 +446,7 @@ function Index() {
       {/* Global Bottom UI */}
       <div className="absolute inset-x-0 bottom-8 flex flex-col items-center gap-6 z-30 pointer-events-none">
         <div
-          className="flex justify-center items-center gap-64 transition-opacity duration-500"
+          className="hidden md:flex justify-center items-center gap-64 transition-opacity duration-500"
           style={{ opacity: voteState === "idle" ? 1 : 0 }}
         >
           <div className="px-3 py-1 bg-black/40 backdrop-blur-sm border border-white/20 rounded text-white/50 font-mono text-sm animate-bounce">
@@ -459,7 +459,7 @@ function Index() {
 
         <div
           className={cn(
-            "text-center text-white/50 text-sm font-serif italic tracking-widest uppercase animate-pulse transition-opacity duration-500",
+            "hidden md:block text-center text-white/50 text-sm font-serif italic tracking-widest uppercase animate-pulse transition-opacity duration-500",
             voteState !== "idle" ? "opacity-0" : "opacity-100",
           )}
         >
