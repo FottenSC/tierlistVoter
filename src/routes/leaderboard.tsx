@@ -77,6 +77,7 @@ const DEFAULT_TIER_CONFIG: Array<TierConfig> = [
   { label: 'B', count: 6, color: '#FFDF7F' },
   { label: 'C', count: 6, color: '#FFFF7F' },
   { label: 'D', count: 5, color: '#BFFF7F' },
+  { label: 'E', count: 5, color: '#7FFF7F' },
 ]
 
 // Get stored tier config
@@ -138,18 +139,18 @@ const TierRow = memo(function TierRow({ label, color, characters, startRank, isL
     <div className="flex border-b border-black/50 last:border-b-0 relative">
       {/* Tier label */}
       <div 
-        className="w-16 md:w-32 min-h-[85px] md:min-h-[110px] flex-shrink-0 flex items-center justify-center text-center font-bold text-xl md:text-3xl text-[#333] border-r border-black/50 p-1"
+        className="w-16 md:w-32 min-h-[60px] md:min-h-[110px] flex-shrink-0 flex items-center justify-center text-center font-bold text-xl md:text-3xl text-[#333] border-r border-black/50 p-1"
         style={{ backgroundColor: color }}
       >
         {label}
       </div>
       
       {/* Character row */}
-      <div className="flex-1 flex flex-wrap items-center gap-0 bg-[#1a1a1a] min-h-[85px] md:min-h-[110px]">
+      <div className="flex-1 flex flex-wrap items-center gap-0 bg-[#1a1a1a] min-h-[60px] md:min-h-[110px]">
         {characters.map((char, index) => (
           <div
             key={char.id}
-            className="relative group w-20 h-20 md:w-[105px] md:h-[105px] cursor-pointer"
+            className="relative group w-14 h-14 md:w-[105px] md:h-[105px] cursor-pointer"
             onClick={() => onCharacterClick(char)}
           >
             <img 
