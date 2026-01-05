@@ -38,8 +38,8 @@ export function VoteCard({ character, onVote, disabled, className, result, varia
     >
 
 
-        {/* Viewer Count Badge (SR) - Standard Card Only */}
-        {!isFullscreen && (
+        {/* Viewer Count Badge (SR) - Standard Card Only - REMOVED */}{/*
+        {!isFullscreen && result && (
             <div className="absolute bottom-24 right-2 z-20 bg-black/80 backdrop-blur-sm px-2 py-0.5 rounded-sm text-xs font-medium text-primary border border-border flex items-center gap-1 shadow-sm">
                 {rank !== undefined && (
                   <>
@@ -51,7 +51,7 @@ export function VoteCard({ character, onVote, disabled, className, result, varia
                 <span className="text-white/60">SR</span>
                 <NumberTicker value={Math.round(character.rating)} duration={tickerDuration} />
             </div>
-        )}
+        )}*/}
 
       {/* Image Container */}
       <div className={cn(
@@ -125,8 +125,8 @@ export function VoteCard({ character, onVote, disabled, className, result, varia
         isFullscreen ? "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 items-center text-center" : ""
       )}>
 
-        {/* Fullscreen Rating Display */}
-        {isFullscreen && (
+        {/* Fullscreen Rating Display - REMOVED */}{/*
+        {isFullscreen && result && (
             <div className="flex flex-col items-center gap-1 mb-1 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-100">
                  {rank !== undefined && (
                    <span className="text-white/40 font-serif italic text-base tracking-[0.2em] uppercase">
@@ -141,7 +141,7 @@ export function VoteCard({ character, onVote, disabled, className, result, varia
                   <div className="h-[1px] w-8 bg-amber-500/50"></div>
                  </div>
             </div>
-        )}
+        )}*/}
 
         <h3 className={cn(
             "font-serif font-bold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors",
